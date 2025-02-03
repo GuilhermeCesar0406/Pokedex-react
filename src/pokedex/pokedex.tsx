@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { listPokemons, PokemonListInterface } from '../pokemon/ListPokemons';
+import { listPokemons } from '../pokemon/ListPokemons'; // Importa a função para pegar pokémons paginados
 import { getPokemonDetails } from '../pokemon/services/getPokemonDetails';
 import { PokemonDetail } from '../pokemon/Interfaces/PokemonDetail';
 import {
     AppBar, Box, Button, Card, CardActions, CardContent, CardMedia,
-    Container, Grid, IconButton, Toolbar, Typography, Modal
+    Container, Grid, Typography, Modal, TextField
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
+import SearchIcon from '@mui/icons-material/Search';
 import { styled } from '@mui/material/styles';
+
+const capitalizeFirstLetter = (name: string) => {
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+};
 
 const StyledCard = styled(Card)({
     height: '100%',
@@ -35,24 +39,61 @@ const modalStyle = {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '50%',
-    bgcolor: 'white',
+    width: '90%',
+    maxWidth: '600px',
+    bgcolor: '#FFF',
     boxShadow: 24,
     borderRadius: 4,
     p: 4,
     textAlign: 'center',
-    background: 'linear-gradient(to right, #FF6A00, #FF3A00)',
-    color: 'white',
+    color: '#000',
+    outline: '3px solid black',
 };
 
 export const Pokedex: React.FC = () => {
-    const [pokemons, setPokemons] = useState<PokemonListInterface[]>([]);
-    const [selectedPokemon, setSelectedPokemon] = useState<PokemonListInterface | undefined>(undefined);
+    const [pokemons, setPokemons] = useState<any[]>([]);  // Ajuste o tipo conforme necessário
+    const [allPokemons, setAllPokemons] = useState<any[]>([]);
+    const [selectedPokemon, setSelectedPokemon] = useState<any | undefined>(undefined);
     const [selectedPokemonDetails, setSelectedPokemonDetails] = useState<PokemonDetail | undefined>(undefined);
     const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        listPokemons().then((response) => setPokemons(response.results));
+        const loadPokemons = async () => {
+            let all: any[] = [];  // Lista para armazenar os pokémons únicos
+            let offset = 0;
+            const limit = 200;
+            const seenPokemons = new Set<string>();  // Para garantir que pegaremos pokémons únicos
+
+            // Carregamento dos Pokémons
+            while (all.length < limit) {
+                try {
+                    // Agora chamamos listPokemons com offset e limit
+                    const response = await listPokemons(offset, 20);  // Passando os parâmetros
+                    const newPokemons = response.results.filter((pokemon: any) => {
+                        if (!seenPokemons.has(pokemon.name)) {
+                            seenPokemons.add(pokemon.name);  // Adiciona o nome ao conjunto para não duplicar
+                            return true;
+                        }
+                        return false;
+                    });
+
+                    all = [...all, ...newPokemons];
+                    if (all.length >= limit) break;  // Para o carregamento quando tivermos 200 pokémons
+                    offset += 20;  // Aumenta o offset para a próxima página
+                } catch (error) {
+                    console.error('Erro ao carregar Pokémons:', error);
+                    break;
+                }
+            }
+
+            setAllPokemons(all.slice(0, limit));
+            setPokemons(all.slice(0, limit));
+            setLoading(false);
+        };
+
+        loadPokemons();
     }, []);
 
     useEffect(() => {
@@ -63,66 +104,75 @@ export const Pokedex: React.FC = () => {
         });
     }, [selectedPokemon]);
 
+    useEffect(() => {
+        const filteredPokemons = allPokemons.filter((pokemon: any) =>
+            pokemon.name.toLowerCase().includes(search.toLowerCase())
+        );
+        setPokemons(filteredPokemons);
+    }, [search, allPokemons]);
+
     return (
         <div style={{ minHeight: '100vh', background: 'radial-gradient(circle, #ffcc00, #ff4500)', padding: '20px' }}>
-            <ButtonAppBar />
+            <AppBar position="static" sx={{ backgroundColor: '#FF4500', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '10px' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', marginLeft: '10px' }}>Pokédex</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#FFF', borderRadius: '5px', padding: '5px', marginRight: '10px' }}>
+                    <SearchIcon sx={{ color: '#000', marginRight: '5px' }} />
+                    <TextField
+                        variant="standard"
+                        placeholder="Buscar Pokémon..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        InputProps={{ disableUnderline: true }}
+                        sx={{ input: { color: '#000' } }}
+                    />
+                </Box>
+            </AppBar>
 
             <Container maxWidth="lg">
-                <Grid container spacing={3}>
-                    {pokemons.map((pokemon: PokemonListInterface) => {
-                        const pokemonId = pokemon.url.split("/")[6];
-                        const imageUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`;
+                {loading ? (
+                    <Typography variant="h6" sx={{ textAlign: 'center', marginTop: '20px' }}>Carregando Pokémons...</Typography>
+                ) : (
+                    <Grid container spacing={3}>
+                        {pokemons.map((pokemon: any) => {
+                            const pokemonId = pokemon.url.split("/")[6];
+                            const imageUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`;
 
-                        return (
-                            <Grid item xs={6} sm={4} md={3} key={pokemon.name}>
-                                <StyledCard>
-                                    <CardMedia component="img" height="200" image={imageUrl} alt={pokemon.name} />
-                                    <CardContent>
-                                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{pokemon.name}</Typography>
-                                    </CardContent>
-                                    <CardActions>
-                                        <StyledButton size="small" onClick={() => setSelectedPokemon(pokemon)}>Ver detalhes</StyledButton>
-                                    </CardActions>
-                                </StyledCard>
-                            </Grid>
-                        );
-                    })}
-                </Grid>
+                            return (
+                                <Grid item xs={12} sm={6} md={3} key={pokemon.name}>
+                                    <StyledCard>
+                                        <CardMedia component="img" image={imageUrl} alt={pokemon.name} />
+                                        <CardContent>
+                                            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{capitalizeFirstLetter(pokemon.name)}</Typography>
+                                        </CardContent>
+                                        <CardActions>
+                                            <StyledButton size="small" onClick={() => setSelectedPokemon(pokemon)}>Ver detalhes</StyledButton>
+                                        </CardActions>
+                                    </StyledCard>
+                                </Grid>
+                            );
+                        })}
+                    </Grid>
+                )}
             </Container>
 
             <Modal open={open} onClose={() => setOpen(false)}>
                 <Box sx={modalStyle}>
                     {selectedPokemonDetails && (
                         <>
-                            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                                {selectedPokemonDetails.name}
-                            </Typography>
-                            <Card sx={{ display: 'flex', mt: 2, justifyContent: 'center', alignItems: 'center', background: 'rgba(255, 255, 255, 0.2)', borderRadius: '12px', padding: '10px' }}>
-                                <CardMedia component="img" sx={{ width: 200 }} image={selectedPokemonDetails.sprites?.front_default} alt={selectedPokemonDetails.name} />
-                                <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>
-                                    <Typography variant="h6">Tipo: {selectedPokemonDetails.types.map((type) => type.type.name).join(', ')}</Typography>
-                                    <Typography variant="h6">Habilidades: {selectedPokemonDetails.abilities.map((ability) => ability.ability.name).join(', ')}</Typography>
+                            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{capitalizeFirstLetter(selectedPokemonDetails.name)}</Typography>
+                            <Card sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
+                                <CardMedia component="img" image={selectedPokemonDetails.sprites?.front_default} alt={selectedPokemonDetails.name} sx={{ width: 200, height: 200 }} />
+                                <Box sx={{ textAlign: 'left' }}>
+                                    <Typography variant="h6">Tipo: {selectedPokemonDetails.types.map(type => type.type.name).join(', ')}</Typography>
+                                    <Typography variant="h6">Habilidades: {selectedPokemonDetails.abilities.map(ability => ability.ability.name).join(', ')}</Typography>
                                 </Box>
                             </Card>
-                            <Button onClick={() => setOpen(false)} sx={{ mt: 2, backgroundColor: '#FF4500', color: '#fff', '&:hover': { backgroundColor: '#FF0000' } }}>Fechar</Button>
+                            <Button onClick={() => setOpen(false)} sx={{ mt: 2, backgroundColor: '#FF4500', color: '#fff' }}>Fechar</Button>
                         </>
                     )}
                 </Box>
             </Modal>
         </div>
-    );
-};
-
-const ButtonAppBar: React.FC = () => {
-    return (
-        <AppBar position="static" sx={{ backgroundColor: '#FF4500' }}>
-            <Toolbar>
-                <IconButton size="large" edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}>
-                    <MenuIcon />
-                </IconButton>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Pokédex</Typography>
-            </Toolbar>
-        </AppBar>
     );
 };
 

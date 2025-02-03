@@ -1,21 +1,8 @@
-import axios from "axios";
+// Supondo que a API seja como o padrão da PokeAPI
 
-export interface PokemonListInterface {
-    name: string;
-    url: string;
-}
-
-interface ListPokemonsInterface {
-    count: number;
-    next: null | string;
-    previous: null | string;
-    results: PokemonListInterface[];
-}
-
-export async function listPokemons(): Promise<ListPokemonsInterface> {
-    const endpoint = `${process.env.REACT_APP_POKEAPI}/pokemon`;
-
-    const response = await axios.get<ListPokemonsInterface>(endpoint);
-
-    return response.data;
-}
+// Função para buscar pokémons com paginação
+export const listPokemons = async (offset: number, limit: number) => {
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
+    const data = await response.json();
+    return data; // Retorna a lista de pokémons, normalmente estará em "results"
+};
