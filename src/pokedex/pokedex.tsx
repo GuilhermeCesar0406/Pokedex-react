@@ -88,20 +88,19 @@ const chipStyle = {
 };
 
 const SearchBox = styled(Box)(({ theme }) => ({
-    position: 'fixed',
-    bottom: '20px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    borderRadius: '50px',
-    backgroundColor: '#FFF',
+    position: 'absolute',
+    top: '80px',  // Ajuste para ficar logo abaixo da logo
+    left: '20px', // Alinha à esquerda
     display: 'flex',
     alignItems: 'center',
-    padding: '5px 10px',
+    borderRadius: '50px',
+    backgroundColor: '#FFF',
+    padding: '5px 5px',
     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
     zIndex: 1000,
     width: '90%',
     [theme.breakpoints.up('sm')]: {
-        width: '250px',
+        width: '300px', // Definir um tamanho adequado para telas maiores
     },
 }));
 
@@ -143,6 +142,10 @@ export const Pokedex: React.FC = () => {
         debounceTimeout.current = setTimeout(() => {
             setSearch(value);
         }, 500);
+    };
+
+    const handleClearSearch = () => {
+        setSearch('');
     };
 
     useEffect(() => {
@@ -288,39 +291,39 @@ export const Pokedex: React.FC = () => {
                                 component="img"
                                 image={selectedPokemonDetails.sprites?.front_default}
                                 alt={selectedPokemonDetails.name}
-                                sx={{ width: 200, height: 200, marginBottom: '20px' }}
+                                sx={{ width: '150px', margin: 'auto', marginBottom: '20px' }}
                             />
                             <Box sx={detailItemStyle}>
-                                <Typography sx={detailHeaderStyle}>Tipos:</Typography>
+                                <Typography sx={detailHeaderStyle}>Tipos</Typography>
                                 <Box>
-                                    {selectedPokemonDetails.types?.map((type, index) => (
-                                        <Chip key={index} label={capitalizeFirstLetter(type.type.name)} sx={chipStyle} />
+                                    {selectedPokemonDetails.types.map((type) => (
+                                        <Chip key={type.type.name} label={capitalizeFirstLetter(type.type.name)} sx={chipStyle} />
                                     ))}
                                 </Box>
                             </Box>
                             <Box sx={detailItemStyle}>
-                                <Typography sx={detailHeaderStyle}>Habilidades:</Typography>
+                                <Typography sx={detailHeaderStyle}>Altura</Typography>
+                                <Typography>{selectedPokemonDetails.height} m</Typography>
+                            </Box>
+                            <Box sx={detailItemStyle}>
+                                <Typography sx={detailHeaderStyle}>Peso</Typography>
+                                <Typography>{selectedPokemonDetails.weight} kg</Typography>
+                            </Box>
+                            <Box sx={detailItemStyle}>
+                                <Typography sx={detailHeaderStyle}>Movimentos</Typography>
                                 <Box>
-                                    {selectedPokemonDetails.abilities?.map((ability, index) => (
-                                        <Chip key={index} label={capitalizeFirstLetter(ability.ability.name)} sx={chipStyle} />
+                                    {selectedPokemonDetails.moves.slice(0, 5).map((move) => (
+                                        <Chip key={move.move.name} label={capitalizeFirstLetter(move.move.name)} sx={chipStyle} />
                                     ))}
                                 </Box>
                             </Box>
                             <Box sx={detailItemStyle}>
-                                <Typography sx={detailHeaderStyle}>Movimentos:</Typography>
+                                <Typography sx={detailHeaderStyle}>Habilidades</Typography>
                                 <Box>
-                                    {selectedPokemonDetails.moves?.slice(0, 5).map((move, index) => (
-                                        <Chip key={index} label={capitalizeFirstLetter(move.move.name)} sx={chipStyle} />
+                                    {selectedPokemonDetails.abilities.map((ability) => (
+                                        <Chip key={ability.ability.name} label={capitalizeFirstLetter(ability.ability.name)} sx={chipStyle} />
                                     ))}
                                 </Box>
-                            </Box>
-                            <Box sx={detailItemStyle}>
-                                <Typography sx={detailHeaderStyle}>Altura:</Typography>
-                                <Typography>{selectedPokemonDetails.height}</Typography>
-                            </Box>
-                            <Box sx={detailItemStyle}>
-                                <Typography sx={detailHeaderStyle}>Peso:</Typography>
-                                <Typography>{selectedPokemonDetails.weight}</Typography>
                             </Box>
                         </>
                     ) : (
@@ -329,6 +332,7 @@ export const Pokedex: React.FC = () => {
                 </Box>
             </Modal>
 
+            {/* Barra de Pesquisa */}
             <SearchBox>
                 <SearchIcon sx={{ color: '#000', marginRight: '8px' }} />
                 <TextField
@@ -339,6 +343,11 @@ export const Pokedex: React.FC = () => {
                     InputProps={{ disableUnderline: true }}
                     sx={{ input: { color: '#000' }, width: '100%' }}
                 />
+                {search && (
+                    <IconButton onClick={handleClearSearch}>
+                        <CloseIcon sx={{ color: '#000' }} />
+                    </IconButton>
+                )}
             </SearchBox>
         </div>
     );
