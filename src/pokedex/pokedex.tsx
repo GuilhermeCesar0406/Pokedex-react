@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { listPokemons } from '../pokemon/ListPokemons';
 import { getPokemonDetails } from '../pokemon/services/getPokemonDetails';
 import { PokemonDetail } from '../pokemon/Interfaces/PokemonDetail';
@@ -54,6 +54,14 @@ const modalStyle = {
     flexDirection: 'column',
     alignItems: 'center',
     paddingBottom: '30px',
+    '@media (max-width: 600px)': {
+        width: '95%',
+        maxWidth: '90%',
+    },
+    '@media (min-width: 600px)': {
+        width: '80%',
+        maxWidth: '700px',
+    },
 };
 
 const detailItemStyle = {
@@ -80,9 +88,10 @@ const chipStyle = {
 };
 
 const SearchBox = styled(Box)(({ theme }) => ({
-    position: 'absolute',
-    top: '20px',  // Ajuste posição se necessário
-    right: '20px',
+    position: 'fixed',
+    bottom: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
     borderRadius: '50px',
     backgroundColor: '#FFF',
     display: 'flex',
@@ -90,26 +99,20 @@ const SearchBox = styled(Box)(({ theme }) => ({
     padding: '5px 10px',
     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
     zIndex: 1000,
-    transition: 'all 0.3s ease',
-    [theme.breakpoints.down('sm')]: {
-        width: '150px',
-        right: '10px',
-        padding: '5px',
-    },
-    [theme.breakpoints.up('md')]: {
+    width: '90%',
+    [theme.breakpoints.up('sm')]: {
         width: '250px',
     },
 }));
 
-// Estilo para o título <h1>
 const StyledH1 = styled(Typography)({
     fontWeight: 'bold',
-    fontSize: '3rem',  // Ajuste o tamanho conforme necessário
+    fontSize: '3rem',
     color: '#FF4500',
-    textShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)', // Sombra de texto
+    textShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)',
     transition: 'color 0.3s ease, transform 0.3s ease',
     '&:hover': {
-        color: '#FFD700', // Altere a cor ao passar o mouse
+        color: '#FFD700',
         transform: 'scale(1.05)',
     },
 });
@@ -125,7 +128,7 @@ export const Pokedex: React.FC = () => {
     const [loadedPokemons, setLoadedPokemons] = useState<Set<string>>(new Set());
     const [offset, setOffset] = useState(0);
     const limit = 20;
-    const totalPokemons = 200;  // Queremos carregar 200 Pokémons
+    const totalPokemons = 200;
     const [noResults, setNoResults] = useState(false);
     const observerRef = useRef<HTMLDivElement | null>(null);
 
@@ -139,7 +142,7 @@ export const Pokedex: React.FC = () => {
         }
         debounceTimeout.current = setTimeout(() => {
             setSearch(value);
-        }, 500); // Atraso de 500ms antes de buscar
+        }, 500);
     };
 
     useEffect(() => {
@@ -196,21 +199,23 @@ export const Pokedex: React.FC = () => {
         loadMorePokemons();
     }, []);
 
+    const handleModalClose = () => {
+        setSelectedPokemon(undefined);
+        setOpen(false);
+    };
+
+    useEffect(() => {
+        if (!isSearching) {
+            setNoResults(false);
+        } else if (filteredPokemons.length === 0) {
+            setNoResults(true);
+        }
+    }, [filteredPokemons, isSearching]);
+
     return (
         <div style={{ minHeight: '100vh', background: 'radial-gradient(circle, #ffcc00, #ff4500)', padding: '20px' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <StyledH1 variant="h1">Pokédex</StyledH1> {/* Estilo aplicado ao h1 */}
-                <SearchBox>
-                    <SearchIcon sx={{ color: '#000', marginRight: '8px' }} />
-                    <TextField
-                        variant="standard"
-                        placeholder="Buscar Pokémon..."
-                        value={search}
-                        onChange={handleSearchChange}
-                        InputProps={{ disableUnderline: true }}
-                        sx={{ input: { color: '#000' }, width: '100%' }}
-                    />
-                </SearchBox>
+                <StyledH1 variant="h1">Pokédex</StyledH1>
             </Box>
 
             <Container maxWidth="lg" sx={{ marginTop: '80px' }}>
@@ -258,10 +263,10 @@ export const Pokedex: React.FC = () => {
                 <div ref={observerRef} style={{ height: '50px', visibility: 'hidden' }} />
             </Container>
 
-            <Modal open={open} onClose={() => setOpen(false)}>
+            <Modal open={open} onClose={handleModalClose}>
                 <Box sx={modalStyle}>
                     <IconButton
-                        onClick={() => setOpen(false)}
+                        onClick={handleModalClose}
                         sx={{
                             position: 'absolute',
                             top: 10,
@@ -323,6 +328,18 @@ export const Pokedex: React.FC = () => {
                     )}
                 </Box>
             </Modal>
+
+            <SearchBox>
+                <SearchIcon sx={{ color: '#000', marginRight: '8px' }} />
+                <TextField
+                    variant="standard"
+                    placeholder="Buscar Pokémon..."
+                    value={search}
+                    onChange={handleSearchChange}
+                    InputProps={{ disableUnderline: true }}
+                    sx={{ input: { color: '#000' }, width: '100%' }}
+                />
+            </SearchBox>
         </div>
     );
 };
