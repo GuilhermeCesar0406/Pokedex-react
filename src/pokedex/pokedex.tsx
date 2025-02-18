@@ -36,12 +36,20 @@ const StyledCard = styled(Card)({
     marginBottom: '20px',
 });
 
+const chipContainerStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    justifyContent: 'center',
+    marginTop: '8px',
+};
+
 const modalStyle = {
     position: 'absolute',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '90%',
+    width: '70%',
     maxWidth: '700px',
     bgcolor: '#FFF',
     boxShadow: 24,
@@ -55,7 +63,7 @@ const modalStyle = {
     alignItems: 'center',
     paddingBottom: '30px',
     '@media (max-width: 600px)': {
-        width: '95%',
+        width: '75%',
         maxWidth: '90%',
     },
     '@media (min-width: 600px)': {
@@ -90,7 +98,7 @@ const chipStyle = {
 const SearchBox = styled(Box)(({ theme }) => ({
     position: 'absolute',
     top: '80px',  // Ajuste para ficar logo abaixo da logo
-    left: '20px', // Alinha à esquerda
+    left: '15px', // Alinha à esquerda
     display: 'flex',
     alignItems: 'center',
     borderRadius: '50px',
@@ -311,7 +319,7 @@ export const Pokedex: React.FC = () => {
                             </Box>
                             <Box sx={detailItemStyle}>
                                 <Typography sx={detailHeaderStyle}>Movimentos</Typography>
-                                <Box>
+                                <Box sx={chipContainerStyle}>
                                     {selectedPokemonDetails.moves.slice(0, 5).map((move) => (
                                         <Chip key={move.move.name} label={capitalizeFirstLetter(move.move.name)} sx={chipStyle} />
                                     ))}
@@ -319,7 +327,7 @@ export const Pokedex: React.FC = () => {
                             </Box>
                             <Box sx={detailItemStyle}>
                                 <Typography sx={detailHeaderStyle}>Habilidades</Typography>
-                                <Box>
+                                <Box sx={chipContainerStyle}>
                                     {selectedPokemonDetails.abilities.map((ability) => (
                                         <Chip key={ability.ability.name} label={capitalizeFirstLetter(ability.ability.name)} sx={chipStyle} />
                                     ))}
