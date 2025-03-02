@@ -61,7 +61,7 @@ const modalStyle = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    paddingBottom: '30px',
+    paddingBottom: '0px',
     '@media (max-width: 600px)': {
         width: '75%',
         maxWidth: '90%',
@@ -98,7 +98,8 @@ const chipStyle = {
 const SearchBox = styled(Box)(({ theme }) => ({
     position: 'absolute',
     top: '80px',  // Ajuste para ficar logo abaixo da logo
-    left: '15px', // Alinha à esquerda
+    left: '50%', // Centraliza horizontalmente
+    transform: 'translateX(-50%)', // Ajusta para alinhar corretamente ao centro
     display: 'flex',
     alignItems: 'center',
     borderRadius: '50px',
@@ -113,6 +114,7 @@ const SearchBox = styled(Box)(({ theme }) => ({
 }));
 
 const StyledH1 = styled(Typography)({
+    cursor: 'pointer',
     fontWeight: 'bold',
     fontSize: '3rem',
     color: '#FF4500',
